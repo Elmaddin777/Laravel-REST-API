@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Item Manager</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootswatch/4.4.1/darkly/bootstrap.min.css">
+    
+  </head>
+  <body>
+    <!-- Navbar
+     ================================================== -->
+     <div class="bs-docs-section clearfix">
+       <div class="row">
+         <div class="col-lg-12">
+           
+
+           <div class="bs-component">
+             <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+               <a class="navbar-brand" href="#" style="margin:0 auto;">ItemsAPI<br />&nbsp&nbsp&nbspby Edi</a>
+             </nav>
+           </div>
+         </div>
+       </div>
+     </div>
+  
+     <div class="container mt-3">
+     <h1>Add Item</h1>
+     <form id="itemForm">
+       <div class="form-group">
+         <label>Text</label>
+         <input type="text" id="text" class="form-control">
+       </div>
+       <div class="form-group">
+         <label>Body</label>
+         <textarea id="body" class="form-control"></textarea>
+       </div>
+       <input type="submit" value="Submit" class="btn btn-primary">
+     </form>
+     <hr>
+     <ul id="items" class="list-group"></ul>
+   </div>
+   
+<div class="modal" id="itemModal">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Modal title</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="editForm">
+          <div class="form-group">
+            <label>Text</label>
+            <input type="text" id="modalText" class="form-control">
+          </div>
+          <div class="form-group">
+            <label>Body</label>
+            <textarea id="modalBody" class="form-control"></textarea>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary" >Save changes</button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          </div>
+        </form>
+      </div>
+      
+    </div>
+  </div>
+</div>
+    
+    <script
+  src="https://code.jquery.com/jquery-3.4.1.js"
+  integrity="sha256-WpOohJOqMqqyKL9FccASB9O0KwACQJpFTUBLTYOVvVU="
+  crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    
+    <script type="text/javascript">
+    
+       $(document).ready(function(){
+         
+         $("body").on("click", ".editItem",  function(e){
+           e.preventDefault();
+           var id = $(this).data('id');
+           $("#itemModal").modal('show');    
+           // Show data of clicked item in the modal
+           $.ajax({
+             method: 'GET',
+             url : "http://itemsapi.dev/api/items/"+id,
+           }).done(function(item){
+             $("#modalText").val(item.text);
+             $("#modalBody").val(item.body); 
+           });
+           editItem(id);
+         })
+         
+         // Edit item
+         function editItem(id){
+           $("#editForm").on('submit', function(e){
+             e.preventDefault();
+             text =  $("#modalText").val();
+             body = $("#modalBody").val();
+             //alert(id); alert(text); alert(body);
+             $.ajax({
+               method: "PUT",
+               url: "http://itemsapi.dev/api/items/"+id,
+               data: {text:text, body:body}
+             }).done(function(item){
+               alert("Item #"+item.id+" updated");
+               location.reload();
+             });
+           });
+           
+         }
+              
+         $("#itemForm").on('submit', function(e){
+           e.preventDefault();
+           
+           let text = $("#text").val();
+           let body = $("#body").val();
+           
+           addItem(text, body);
+       });
+       
+       // Insert data
+       function addItem(text, body){
+         $.ajax({
+           method: "POST",
+           url: "http://itemsapi.dev/api/items",
+           data: {text:text, body:body}
+         }).done(function(item){
+           alert("Item #"+item.id+" added");
+           location.reload();
+         });
+       }
+       
+       // Delete data
+       $("body").on("click", ".deleteItem",  function(e){
+         e.preventDefault();
+         var id = $(this).data('id');
+         
+         deleteItem(id);
+       })
+       
+       // Delete Items
+       function deleteItem(id){
+         $.ajax({
+           method: 'DELETE',
+           url : "http://itemsapi.dev/api/items/"+id,
+         }).done(function(){
+           alert("Item #"+id+" removed");
+           location.reload();
+         });
+       }
+         
+         
+         getItems();   
+         // Get items from API;
+         function getItems(){
+           $.ajax({
+             url: "http://itemsapi.dev/api/items"
+           }).done(function(items){
+             var output = "";
+     
+             $.each(items, function(key, item){
+               output += `
+               <li class="list-group-item">
+                 <strong>${item.text}: </strong>${item.body} <a style='float:right;' href='#' data-id=${item.id} class='deleteItem'>Delete</a><a style='float:right;' href='#' data-id=${item.id} class='editItem'>Edit&nbsp</a>
+             </li>
+               `;
+           });
+           $("#items").append(output);
+           });
+         }
+         
+         
+       });
+     </script>
+    
+    
+    
+    
+    
+  </body>
+</html>
